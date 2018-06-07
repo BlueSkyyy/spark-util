@@ -19,7 +19,6 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
   lazy val defualtFrom: String = "LAST"
   lazy val log = LoggerFactory.getLogger(logname)
   var kc: KafkaCluster = null
-  //val WRONG_GROUP_FROM = "wrong.groupid.from" //新用户或者过期用户 重新读取的点 （最新或者最旧）
   val maxMessagesPerPartitionKEY = "spark.streaming.kafka.maxRatePerPartition"
   /**
    * @author LMQ
@@ -167,8 +166,8 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
    */
   def getLatestOffsets(
     topics: Set[String],
-    kafkaParams: Map[String, String]) = {
-    instance(kafkaParams)
+    kp: Map[String, String]) = {
+    instance(kp)
     var fromOffsets = (for {
       topicPartitions <- kc.getPartitions(topics).right
       leaderOffsets <- (kc.getLatestLeaderOffsets(topicPartitions)).right
@@ -189,8 +188,8 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
    */
   def getEarliestOffsets(
     topics: Set[String],
-    kafkaParams: Map[String, String]) = {
-    instance(kafkaParams)
+    kp: Map[String, String]) = {
+    instance(kp)
     var fromOffsets = (for {
       topicPartitions <- kc.getPartitions(topics).right
       leaderOffsets <- (kc.getEarliestLeaderOffsets(topicPartitions)).right
@@ -247,7 +246,25 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
    */
   def updataOffsetToLastest(topics: Set[String], kp: Map[String, String]) = {
     val lastestOffsets = getLatestOffsets(topics, kp)
-    updateConsumerOffsets(kp, kp.get("group.id").get, lastestOffsets)
+    updateConsumerOffsets(kp, kp.get(GROUPID).get, lastestOffsets)
     lastestOffsets
+  }
+   /**
+   * @author LMQ
+   * @description 将某个groupid的偏移量更新至最早的offset
+   * @description 
+   */
+  def updataOffsetToEarliest(topics: Set[String], kp: Map[String, String]) = {
+    val earliestOffset = getEarliestOffsets(topics, kp)
+    updateConsumerOffsets(kp, kp.get(GROUPID).get, earliestOffset)
+    earliestOffset
+  }
+     /**
+   * @author LMQ
+   * @description 将某个groupid的偏移量更新至自定义的offset位置
+   * @description offsets的格式为 ：  topicname1,partNum1,offset1|topicname1,partNum2,offset2|....
+   */
+  def updataOffsetToCustom( kp: Map[String, String],offsets:String) = {
+    updateConsumerOffsets(kp, offsets)
   }
 }

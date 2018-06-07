@@ -3,8 +3,7 @@ package org.apache.spark.kafka.writer
 import org.apache.spark.rdd.RDD
 import java.util.Properties
 import org.apache.kafka.clients.producer.ProducerRecord
-private[spark]
-class rddKafkaWriter[T](@transient private val rdd: RDD[T]) {
+class RDDKafkaWriter[T](@transient private val rdd: RDD[T]) {
  /**
   * @author LMQ
   * @description 将rdd的数据写入kafka 
