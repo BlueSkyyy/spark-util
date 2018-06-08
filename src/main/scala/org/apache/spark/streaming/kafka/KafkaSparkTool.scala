@@ -112,6 +112,7 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
         val lastoffset = partLastOffsets.get(tp).offset
         if (n > lastoffset || n < earliestLeaderOffset) { //如果offset超过了最新的//消费过，但是过时了，就从最新开始消费
           log.warn("-- Consumer offset is OutTime --- " + tp + "->" + n)
+          log.warn("-- RESET OFFSET FROM  --- " + last_earlies)
           last_earlies match {
             case "EARLIEST" => (tp -> earliestLeaderOffset)
             case _          => (tp -> lastoffset)
