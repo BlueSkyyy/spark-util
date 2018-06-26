@@ -22,7 +22,7 @@ object SparkKafkaContextTest {
       brokers, 
       groupId, 
       "consum",   // last/consum/custom
-      "last" //wrong_from
+      "earliest" //wrong_from
       )
       val topics = Set("test")
       //val sku=new SparkKafkaUtil(kp)
@@ -42,6 +42,7 @@ object SparkKafkaContextTest {
     // kafkadataRdd.map(f)
 
     kafkadataRdd.foreach(println)
+    kafkadataRdd.getRDDOffsets().foreach(println)
     //kafkadataRdd.updateOffsets(kp)
 
   }
