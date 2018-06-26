@@ -18,4 +18,23 @@ class RDDKafkaWriter[T](@transient private val rdd: RDD[T]) {
         .foreach(record => producer.send(record))
     }
   }
+   /**
+  * @author LMQ
+  * @description 将rdd的数据写入kafka 
+  */
+  def writeToKafkaBackCount[K, V](
+    producerConfig: Properties,
+    transformFunc: T => ProducerRecord[K, V]):Int= {
+    rdd.mapPartitions{ partition =>
+     val list=partition.toList
+      val producer = KafkaProducerCache.getProducer[K, V](producerConfig)
+      list
+        .map(transformFunc)
+        .foreach(record => producer.send(record))
+        Iterator.apply(list.size)
+      }
+    .collect()
+    .toList
+    .sum
+  }
 }
