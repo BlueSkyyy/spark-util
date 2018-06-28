@@ -14,7 +14,7 @@ import org.apache.spark.core.SparkKafkaConfsKey
  * @description 读取kafka，操作offset等操作工具
  * @description 只用于spark包使用
  */
-private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
+private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey {
   var logname = "KafkaSparkTool" //外部可重写
   lazy val defualtFrom: String = "LAST"
   lazy val log = LoggerFactory.getLogger(logname)
@@ -41,9 +41,9 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
    *  从何读起将取决于配置 （wrong.groupid.from）= > ( LAST / EARLIEST )
    */
   def getConsumerOffset(
-    kp: Map[String, String],
+    kp:      Map[String, String],
     groupId: String,
-    topics: Set[String]) = {
+    topics:  Set[String]) = {
     instance(kp)
     var offsets: Map[TopicAndPartition, Long] = Map()
     topics.foreach { topic =>
@@ -58,27 +58,27 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
         log.warn("-- Use LAST Offset (set 'wrong.groupid.from') -- ")
         "LAST"
       }
-      val consumerOffsetsE = kc.getConsumerOffsets(groupId, partitions) //获取这个topic的每个patition的消费信息      
+      val consumerOffsetsE = kc.getConsumerOffsets(groupId, partitions) //获取这个topic的每个patition的消费信息
       if (consumerOffsetsE.isLeft) hasConsumed = false
       if (hasConsumed) {
         offsets ++= (getEffectiveOffset(kc, kp, partitions, consumerOffsetsE, last_earlies))
       } else {
-        offsets ++= (getNewGroupIdOffset(groupId, partitions, kp,last_earlies))
+        offsets ++= (getNewGroupIdOffset(groupId, partitions, kp, last_earlies))
       }
     }
     offsets
   }
-  
-   /**
+
+  /**
    * @author LMQ
    * @time 2018-04-04
    * @func 获取一个新grouid的offset （last_earlies决定是从最新还是最旧）
    */
   def getNewGroupIdOffset(
-    groupId: String,
-    partitions: Set[TopicAndPartition],
-    kp: Map[String, String],
-    last_earlies: String)= {
+    groupId:      String,
+    partitions:   Set[TopicAndPartition],
+    kp:           Map[String, String],
+    last_earlies: String) = {
     log.warn(" NEW  GROUP   ID  : " + groupId)
     log.warn(" NEW  GROUP  FROM : " + last_earlies)
     var newgroupOffsets = last_earlies match {
@@ -96,11 +96,11 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
    * @func 获取有效的offset
    */
   def getEffectiveOffset(
-    kc: KafkaCluster,
-    kp: Map[String, String],
-    partitions: Set[TopicAndPartition],
+    kc:               KafkaCluster,
+    kp:               Map[String, String],
+    partitions:       Set[TopicAndPartition],
     consumerOffsetsE: Either[KafkaCluster.Err, Map[TopicAndPartition, Long]],
-    last_earlies: String) = {
+    last_earlies:     String) = {
     val earliestLeaderOffsets = kc.getEarliestLeaderOffsets(partitions).right.get //获取最早的偏移量
     val partLastOffsets = kc.getLatestLeaderOffsets(partitions).right
     val consumerOffsets = consumerOffsetsE.right.get
@@ -128,7 +128,7 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
    * @description 更新消费者的offset至zookeeper
    */
   def updateConsumerOffsets(
-    kp: Map[String, String],
+    kp:      Map[String, String],
     groupId: String,
     offsets: Map[TopicAndPartition, Long]): Unit = {
     instance(kp)
@@ -141,24 +141,25 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
    * @description 更新消费者的offset至zookeeper
    */
   def updateConsumerOffsets(
-    kp: Map[String, String],
+    kp:      Map[String, String],
     offsets: Map[TopicAndPartition, Long]): Unit = {
     val groupId = kp.get(GROUPID).get
     updateConsumerOffsets(kp, groupId, offsets)
   }
-    /**
+  /**
    * @author LMQ
    * @description 更新消费者的offset至zookeeper
    */
   def updateConsumerOffsets(
-    kp: Map[String, String],
+    kp:      Map[String, String],
     offsets: String): Unit = {
     val groupId = kp.get(GROUPID).get
-    val offsetArr=offsets.split('|')
-                         .map { offsetStr => 
-                          val offsetArr=offsetStr.split(",")
-                          new TopicAndPartition(offsetArr(0), offsetArr(1).toInt)->offsetArr(2).toLong}
-                         .toMap
+    val offsetArr = offsets.split('|')
+      .map { offsetStr =>
+        val offsetArr = offsetStr.split(",")
+        new TopicAndPartition(offsetArr(0), offsetArr(1).toInt) -> offsetArr(2).toLong
+      }
+      .toMap
     updateConsumerOffsets(kp, groupId, offsetArr)
   }
   /**
@@ -167,7 +168,7 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
    */
   def getLatestOffsets(
     topics: Set[String],
-    kp: Map[String, String]) = {
+    kp:     Map[String, String]) = {
     instance(kp)
     var fromOffsets = (for {
       topicPartitions <- kc.getPartitions(topics).right
@@ -189,7 +190,7 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
    */
   def getEarliestOffsets(
     topics: Set[String],
-    kp: Map[String, String]) = {
+    kp:     Map[String, String]) = {
     instance(kp)
     var fromOffsets = (for {
       topicPartitions <- kc.getPartitions(topics).right
@@ -220,8 +221,8 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
    *
    */
   def latestLeaderOffsets(
-    kp: Map[String, String],
-    retries: Int,
+    kp:             Map[String, String],
+    retries:        Int,
     currentOffsets: Map[TopicAndPartition, Long]): Map[TopicAndPartition, LeaderOffset] = {
     if (kc == null) {
       kc = new KafkaCluster(kp)
@@ -250,22 +251,22 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey{
     updateConsumerOffsets(kp, kp.get(GROUPID).get, lastestOffsets)
     lastestOffsets
   }
-   /**
+  /**
    * @author LMQ
    * @description 将某个groupid的偏移量更新至最早的offset
-   * @description 
+   * @description
    */
   def updataOffsetToEarliest(topics: Set[String], kp: Map[String, String]) = {
     val earliestOffset = getEarliestOffsets(topics, kp)
     updateConsumerOffsets(kp, kp.get(GROUPID).get, earliestOffset)
     earliestOffset
   }
-     /**
+  /**
    * @author LMQ
    * @description 将某个groupid的偏移量更新至自定义的offset位置
    * @description offsets的格式为 ：  topicname1,partNum1,offset1|topicname1,partNum2,offset2|....
    */
-  def updataOffsetToCustom( kp: Map[String, String],offsets:String) = {
+  def updataOffsetToCustom(kp: Map[String, String], offsets: String) = {
     updateConsumerOffsets(kp, offsets)
   }
 }

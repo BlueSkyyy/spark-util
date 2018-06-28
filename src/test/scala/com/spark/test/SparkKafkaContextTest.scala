@@ -34,7 +34,9 @@ object SparkKafkaContextTest {
      
 
     val kafkadataRdd = 
-      skc.kafkaRDD[(String, String)](kp, topics, msgHandle)//根据配置开始读取
+      skc.kafkaRDD[((String, Int, Long), String)](kp, topics, msgHandle2)//根据配置开始读取
+      
+      kafkadataRdd.foreach(x=>x)
       //skc.kafkaRDD(kp, topics, fromOffset)//指定一个位置开始读取    
     
     //RDD.rddToPairRDDFunctions(kafkadataRdd)
