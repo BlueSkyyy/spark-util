@@ -13,7 +13,6 @@
 * 增加 "kafka.consumer.from" -> "CUSTOM" : 来决定从具体哪个offset开始读取数据；
   配置文件里增加  kafka.offset= ${offset}；offset 格式为 ：
   topic,partition,offset|topic,partition,offset|topic,partition,offset
-  (当然你要自己定义offset也可以。这个在SparkKafkaContext已经提供了相应的方法。需要你传入 fromoffset)
 * 提供 "wrong.groupid.from"->"EARLIEST/LAST" 参数 ，决定新group id 或者过期的 group id 从哪开始读取
 * 提供 fromoffset 参数，决定从具体的offset开始获取数据
 * 提供 rdd 更新kafka offsets到zookeeper的方法（rdd.updateOffsets(kp)）
